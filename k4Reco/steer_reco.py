@@ -17,6 +17,9 @@ parser.add_argument("--data", type=str, default="/dataMuC", help="Top-level dire
 parser.add_argument("--compressionLevel", type=int, default=None, help="Set compression level of output")
 parser.add_argument("--skipReco", action="store_true", default=False, help="Skip reconstruction")
 parser.add_argument("--skipTrackerConing", action="store_true", default=False, help="Skip tracker coning")
+parser.add_argument("--trackerOnly", action="store_true", default=False, help="Only run tracking")
+parser.add_argument("--inputFile", type=str, default="", help="Input file, if set ignores the automatic path lookup in `--data`")
+parser.add_argument("--outputFile", type=str, default="", help="Output file, if set ignores the automatic output path generation in `--data`")
 the_args = parser.parse_args()
 
 Coned = "" if the_args.skipTrackerConing else "Coned"
@@ -31,7 +34,10 @@ parseConstants(CONSTANTS)
 
 read = LcioEvent()
 read.OutputLevel = INFO
-read.Files = [f"{the_args.data}/sim/{the_args.TypeEvent}/{the_args.TypeEvent}_sim_{the_args.InFileName}.slcio"]
+if the_args.inputFile == "":
+    read.Files = [f"{the_args.data}/sim/{the_args.TypeEvent}/{the_args.TypeEvent}_sim_{the_args.InFileName}.slcio"]
+else:
+    read.Files = [the_args.inputFile]
 algList.append(read)
 
 EventNumber = MarlinProcessorWrapper("EventNumber")
@@ -58,7 +64,7 @@ if not the_args.enableBIB:
         "DropCollectionNames": [],
         "FullSubsetCollections": [],
         "KeepCollectionNames": ["MCParticle_SiTracks", "MCParticle_SelectedTracks"],
-        "LCIOOutputFile": [f"{the_args.data}/reco/{the_args.TypeEvent}/{the_args.TypeEvent}_reco_{the_args.InFileName}.slcio"],
+        "LCIOOutputFile": [the_args.outputFile if the_args.outputFile != "" else f"{the_args.data}/reco/{the_args.TypeEvent}/{the_args.TypeEvent}_reco_{the_args.InFileName}.slcio"],
         "LCIOWriteMode": ["WRITE_NEW"]
     }
 else:
@@ -1004,23 +1010,24 @@ if not the_args.skipTrackerConing:
     algList.append(InnerEndcapConer)
     algList.append(OuterPlanarConer)
     algList.append(OuterEndcapConer)
-algList.append(MyEcalBarrelDigi)
-algList.append(MyEcalBarrelReco)
-algList.append(MyEcalEndcapDigi)
-algList.append(MyEcalEndcapReco)
-algList.append(MyHcalBarrelDigi)
-algList.append(MyHcalBarrelReco)
-algList.append(MyHcalEndcapDigi)
-algList.append(MyHcalEndcapReco)
-algList.append(MyEcalBarrelConer)
-algList.append(MyEcalEndcapConer)
-algList.append(MyHcalBarrelConer)
-algList.append(MyHcalEndcapConer)
-algList.append(MyEcalBarrelSelector)
-algList.append(MyEcalEndcapSelector)
-algList.append(MyHcalBarrelSelector)
-algList.append(MyHcalEndcapSelector)
-algList.append(MyDDSimpleMuonDigi)
+if not the_args.trackerOnly:
+    algList.append(MyEcalBarrelDigi)
+    algList.append(MyEcalBarrelReco)
+    algList.append(MyEcalEndcapDigi)
+    algList.append(MyEcalEndcapReco)
+    algList.append(MyHcalBarrelDigi)
+    algList.append(MyHcalBarrelReco)
+    algList.append(MyHcalEndcapDigi)
+    algList.append(MyHcalEndcapReco)
+    algList.append(MyEcalBarrelConer)
+    algList.append(MyEcalEndcapConer)
+    algList.append(MyHcalBarrelConer)
+    algList.append(MyHcalEndcapConer)
+    algList.append(MyEcalBarrelSelector)
+    algList.append(MyEcalEndcapSelector)
+    algList.append(MyHcalBarrelSelector)
+    algList.append(MyHcalEndcapSelector)
+    algList.append(MyDDSimpleMuonDigi)
 if not the_args.skipReco:
     algList.append(CKFTracking)
     algList.append(TrackDeduper)
@@ -1029,12 +1036,13 @@ if not the_args.skipReco:
     algList.append(Refit)
     algList.append(MyTrackSelector)
     algList.append(MyTrackTruthSelected)
-    algList.append(DDMarlinPandora)
-    algList.append(FastJetProcessor)
-    algList.append(ValenciaJetProcessor)
-    algList.append(TrueMCintoRecoForJets)
-    algList.append(TruthFastJetProcessor)
-    algList.append(TruthValenciaJetProcessor)
+    if not the_args.trackerOnly:
+        algList.append(DDMarlinPandora)
+        algList.append(FastJetProcessor)
+        algList.append(ValenciaJetProcessor)
+        algList.append(TrueMCintoRecoForJets)
+        algList.append(TruthFastJetProcessor)
+        algList.append(TruthValenciaJetProcessor)
 algList.append(Output_REC)
 
 ApplicationMgr(TopAlg=algList,
