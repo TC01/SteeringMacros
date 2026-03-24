@@ -18,6 +18,7 @@ parser.add_argument("--compressionLevel", type=int, default=None, help="Set comp
 parser.add_argument("--skipReco", action="store_true", default=False, help="Skip reconstruction")
 parser.add_argument("--skipTrackerConing", action="store_true", default=False, help="Skip tracker coning")
 parser.add_argument("--trackerOnly", action="store_true", default=False, help="Only run tracking")
+parser.add_argument("--skipTruth", action="store_true", default=False, help="Skip stuff related to truth particles")
 parser.add_argument("--inputFile", type=str, default="", help="Input file, if set ignores the automatic path lookup in `--data`")
 parser.add_argument("--outputFile", type=str, default="", help="Output file, if set ignores the automatic output path generation in `--data`")
 the_args = parser.parse_args()
@@ -1032,11 +1033,13 @@ if not the_args.trackerOnly:
 if not the_args.skipReco:
     algList.append(CKFTracking)
     algList.append(TrackDeduper)
-    algList.append(MyTrackTruth)
+    if not the_args.skipTruth:
+        algList.append(MyTrackTruth)
     algList.append(MyTrackSelectorHoles)
     algList.append(Refit)
     algList.append(MyTrackSelector)
-    algList.append(MyTrackTruthSelected)
+    if not the_args.skipTruth:
+        algList.append(MyTrackTruthSelected)
     if not the_args.trackerOnly:
         algList.append(DDMarlinPandora)
         algList.append(FastJetProcessor)
