@@ -109,9 +109,10 @@ else:
             "SiTracks", "SelectedTracks",
             "MCParticle_SiTracks", "MCParticle_SelectedTracks"
         ],
-        "LCIOOutputFile": [f"{the_args.data}/recoBIB/{the_args.TypeEvent}/{the_args.TypeEvent}_reco_{the_args.InFileName}.slcio"],
+        "LCIOOutputFile": [the_args.outputFile if the_args.outputFile != "" else f"{the_args.data}/recoBIB/{the_args.TypeEvent}/{the_args.TypeEvent}_reco_{the_args.InFileName}.slcio"],
         "LCIOWriteMode": ["WRITE_NEW"]
     }
+
 if the_args.compressionLevel is not None:
     Output_REC.Parameters["CompressionLevel"] = [str(the_args.compressionLevel)]
 
