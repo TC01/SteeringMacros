@@ -4,6 +4,7 @@ from Gaudi.Configuration import *
 from Configurables import LcioEvent, EventDataSvc, MarlinProcessorWrapper
 from k4MarlinWrapper.parseConstants import *
 
+import glob
 import os
 
 from k4FWCore.parseArgs import parser
@@ -649,6 +650,16 @@ MyHcalEndcapConer.Parameters = {
     "ConeWidth": ["0.6"]
 }
 
+# This is slightly fragile (it will break if the user rebuilds either DD4HEP or Delphes),
+# but look up the location of the install directory and find MyBIBUtils inside it.
+# If this fails (because MyBIBUtils can't be found) then we fall back to trying to read them from --code.
+# This could be changed if there was an environment variable available for MyBIBUtils.
+spack_root = os.path.commonpath([os.getenv("DD4HEP", ""), os.getenv("DELPHES", "")])
+try:
+    my_bib_utils = glob.glob(os.path.join(spack_root, "mybibutils*"))[0]
+except IndexError:
+    print("Could not find MyBIBUtils in spack installation, will try to read threshold files from --code.")
+    my_bib_utils = ""
 
 MyEcalBarrelSelector = MarlinProcessorWrapper("MyEcalBarrelSelector")
 MyEcalBarrelSelector.OutputLevel = INFO
@@ -658,7 +669,7 @@ MyEcalBarrelSelector.Parameters = {
     "CaloRelationCollectionName": ["EcalBarrelRelationsSimConed"],
     "GoodHitCollection": ["EcalBarrelCollectionSel"],
     "GoodRelationCollection": ["EcalBarrelRelationsSimSel"],
-    "ThresholdsFilePath": [f"{the_args.code}/MyBIBUtils/data/ECAL_Thresholds_10TeV.root"],
+    "ThresholdsFilePath": [f"{my_bib_utils}/share/MyBIBUtils/data/ECAL_Thresholds_10TeV.root" if my_bib_utils != "" else f"{the_args.code}/MyBIBUtils/data/ECAL_Thresholds_10TeV.root"],
     "Nsigma": ["0"],
     "TimeWindowMin": ["-0.3"],
     "TimeWindowMax": ["0.3"],
@@ -673,7 +684,7 @@ MyEcalEndcapSelector.Parameters = {
     "CaloRelationCollectionName": ["EcalEndcapRelationsSimConed"],
     "GoodHitCollection": ["EcalEndcapCollectionSel"],
     "GoodRelationCollection": ["EcalEndcapRelationsSimSel"],
-    "ThresholdsFilePath": [f"{the_args.code}/MyBIBUtils/data/ECAL_Thresholds_10TeV.root"],
+    "ThresholdsFilePath": [f"{my_bib_utils}/share/MyBIBUtils/data/ECAL_Thresholds_10TeV.root" if my_bib_utils != "" else f"{the_args.code}/MyBIBUtils/data/ECAL_Thresholds_10TeV.root"],
     "Nsigma": ["0"],
     "TimeWindowMin": ["-0.3"],
     "TimeWindowMax": ["0.3"],
@@ -689,7 +700,7 @@ MyHcalBarrelSelector.Parameters = {
     "CaloRelationCollectionName": ["HcalBarrelRelationsSimConed"],
     "GoodHitCollection": ["HcalBarrelCollectionSel"],
     "GoodRelationCollection": ["HcalBarrelRelationsSimSel"],
-    "ThresholdsFilePath": [f"{the_args.code}/MyBIBUtils/data/HCAL_Thresholds_10TeV.root"],
+    "ThresholdsFilePath": [f"{my_bib_utils}/share/MyBIBUtils/data/HCAL_Thresholds_10TeV.root" if my_bib_utils != "" else f"{the_args.code}/MyBIBUtils/data/HCAL_Thresholds_10TeV.root"],
     "FlatThreshold": ["5e-05"],
     "Nsigma": ["0"],
     "TimeWindowMin": ["-0.3"],
@@ -705,7 +716,7 @@ MyHcalEndcapSelector.Parameters = {
     "CaloRelationCollectionName": ["HcalEndcapRelationsSimConed"],
     "GoodHitCollection": ["HcalEndcapCollectionSel"],
     "GoodRelationCollection": ["HcalEndcapRelationsSimSel"],
-    "ThresholdsFilePath": [f"{the_args.code}/MyBIBUtils/data/HCAL_Thresholds_10TeV.root"],
+    "ThresholdsFilePath": [f"{my_bib_utils}/share/MyBIBUtils/data/HCAL_Thresholds_10TeV.root" if my_bib_utils != "" else f"{the_args.code}/MyBIBUtils/data/HCAL_Thresholds_10TeV.root"],
     "FlatThreshold": ["5e-05"],
     "Nsigma": ["0"],
     "TimeWindowMin": ["-0.3"],
@@ -713,6 +724,21 @@ MyHcalEndcapSelector.Parameters = {
     "DoBIBsubtraction": ["false"]
 }
 
+def updatePandoraPaths(pandoraSettings, codedir):
+    """ Helper function to update XML paths in a PandoraSettings XML file.
+        Pandora itself doesn't seem to be able to do anything like this, which means that
+        absolute paths need to be specified."""
+    newpath = os.path.join(os.path.dirname(pandoraSettings), "temp_" + os.path.basename(pandoraSettings))
+    with open(pandoraSettings) as settingsFile:
+        text = settingsFile.read()
+    newtext = text.replace("/code", codedir)
+    with open(newpath, 'w') as newSettings:
+        newSettings.write(newtext)
+
+    return newpath
+
+pandoraSettingsFile = updatePandoraPaths(f"{the_args.code}/SteeringMacros/PandoraSettings/PandoraSettingsDefault.xml", the_args.code)
+print("Running using temporary PandoraSettings XML: " + pandoraSettingsFile)
 
 DDMarlinPandora = MarlinProcessorWrapper("DDMarlinPandora")
 DDMarlinPandora.OutputLevel = INFO
@@ -784,7 +810,7 @@ DDMarlinPandora.Parameters = {
     "NEventsToSkip": ["0"],
     "NOuterSamplingLayers": ["3"],
     "PFOCollectionName": ["PandoraPFOs"],
-    "PandoraSettingsXmlFile": [f"{the_args.code}/SteeringMacros/PandoraSettings/PandoraSettingsDefault.xml"],
+    "PandoraSettingsXmlFile": [pandoraSettingsFile],
     "ProngVertexCollections": ["ProngVertices"],
     "ReachesECalBarrelTrackerOuterDistance": ["-100"],
     "ReachesECalBarrelTrackerZMaxDistance": ["-50"],
