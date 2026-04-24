@@ -19,6 +19,7 @@ parser.add_argument("--compressionLevel", type=int, default=None, help="Set comp
 parser.add_argument("--skipReco", action="store_true", default=False, help="Skip reconstruction")
 parser.add_argument("--skipTrackerConing", action="store_true", default=False, help="Skip tracker coning")
 parser.add_argument("--trackerOnly", action="store_true", default=False, help="Only run tracking")
+parser.add_argument("--forceSurface", action="store_true", default=False, help="Force hits to be within bounds in the tracker")
 parser.add_argument("--skipTruth", action="store_true", default=False, help="Skip stuff related to truth particles")
 parser.add_argument("--inputFile", type=str, default="", help="Input file, if set ignores the automatic path lookup in `--data`")
 parser.add_argument("--outputFile", type=str, default="", help="Output file, if set ignores the automatic output path generation in `--data`")
@@ -141,7 +142,8 @@ VXDBarrelDigitiser.Parameters = {
     "TimeWindowMax": ["0.15"],
     "TimeWindowMin": ["-0.09"],
     "TrackerHitCollectionName": ["VBTrackerHits"],
-    "UseTimeWindow": ["true"]
+    "UseTimeWindow": ["true"],
+    "ForceHitsOntoSurface": ["true" if the_args.forceSurface else "false"],
 }
 
 VXDEndcapDigitiser = MarlinProcessorWrapper("VXDEndcapDigitiser")
@@ -159,7 +161,8 @@ VXDEndcapDigitiser.Parameters = {
     "TimeWindowMax": ["0.15"],
     "TimeWindowMin": ["-0.09"],
     "TrackerHitCollectionName": ["VETrackerHits"],
-    "UseTimeWindow": ["true"]
+    "UseTimeWindow": ["true"],
+    "ForceHitsOntoSurface": ["true" if the_args.forceSurface else "false"],
 }
 
 InnerPlanarDigiProcessor = MarlinProcessorWrapper("InnerPlanarDigiProcessor")
@@ -177,7 +180,8 @@ InnerPlanarDigiProcessor.Parameters = {
     "TimeWindowMax": ["0.3"],
     "TimeWindowMin": ["-0.18"],
     "TrackerHitCollectionName": ["IBTrackerHits"],
-    "UseTimeWindow": ["true"]
+    "UseTimeWindow": ["true"],
+    "ForceHitsOntoSurface": ["true" if the_args.forceSurface else "false"],
 }
 
 InnerEndcapPlanarDigiProcessor = MarlinProcessorWrapper(
@@ -196,7 +200,8 @@ InnerEndcapPlanarDigiProcessor.Parameters = {
     "TimeWindowMax": ["0.3"],
     "TimeWindowMin": ["-0.18"],
     "TrackerHitCollectionName": ["IETrackerHits"],
-    "UseTimeWindow": ["true"]
+    "UseTimeWindow": ["true"],
+    "ForceHitsOntoSurface": ["true" if the_args.forceSurface else "false"],
 }
 
 OuterPlanarDigiProcessor = MarlinProcessorWrapper("OuterPlanarDigiProcessor")
@@ -214,7 +219,8 @@ OuterPlanarDigiProcessor.Parameters = {
     "TimeWindowMax": ["0.3"],
     "TimeWindowMin": ["-0.18"],
     "TrackerHitCollectionName": ["OBTrackerHits"],
-    "UseTimeWindow": ["true"]
+    "UseTimeWindow": ["true"],
+    "ForceHitsOntoSurface": ["true" if the_args.forceSurface else "false"],
 }
 
 OuterEndcapPlanarDigiProcessor = MarlinProcessorWrapper(
@@ -233,7 +239,8 @@ OuterEndcapPlanarDigiProcessor.Parameters = {
     "TimeWindowMax": ["0.3"],
     "TimeWindowMin": ["-0.18"],
     "TrackerHitCollectionName": ["OETrackerHits"],
-    "UseTimeWindow": ["true"]
+    "UseTimeWindow": ["true"],
+    "ForceHitsOntoSurface": ["true" if the_args.forceSurface else "false"],
 }
 
 VXDBarrelConer = MarlinProcessorWrapper("VXDBarrelConer")
